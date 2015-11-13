@@ -1,3 +1,26 @@
 ---
 
-- fail: msg="RedHat is not supported now"
+- name: Install requirements (Redhat)
+  yum: name={{item}}
+  with_items: [openvpn, udev, openssl]
+
+- name: Install libpam-pwdfile deps
+  yum: name={{item}}
+  when: openvpn_use_pam_users|default(false)
+  with_items: [glibc-headers,pam-devel]
+
+- name: git libpam-pwdfile source
+  command: clone git git@github.com:tiwe-de/libpam-pwdfile.git chdir=/tmp/
+  when: openvpn_use_pam_users|default(false)
+
+- name: make libpam-pwdfile source
+  command: make && make install chdir=/tmp/libpam-pwdfile/
+  when: openvpn_use_pam_users|default(false)
+
+- name: Install python-passlib
+  command: pip install passlib
+  when: openvpn_use_pam_users|default(false)
+
+- name: Install LDAP dependencies (Redhat)
+  yum: name=openvpn-auth-ldap
+  when: openvpn_use_ldap
